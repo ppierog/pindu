@@ -1,5 +1,7 @@
 import streamlit as st
 
+from datetime import date
+
 from app_data import (
     SERIES_LEGEND_LABELS,
     SERIES_OPTIONS,
@@ -7,12 +9,13 @@ from app_data import (
     format_latest_period,
     load_public_debt_data,
 )
+
 from views.debt import render_debt_view
 
 
 st.set_page_config(page_title="Dług polski", page_icon="📊", layout="wide")
-st.title("Dług publiczny Polski")
-st.write("Widok analizy długu publicznego i EDP od 2006 roku.")
+st.title("Dług Publiczny Polski")
+st.write("Analiza Długu Publicznego (DP) i Europejskiego Długu Publicznego (EDP)")
 
 with st.sidebar:
     st.header("Parametry")
@@ -31,7 +34,10 @@ with st.sidebar:
         step=0.1,
     )
     series_label = st.selectbox("Seria", options=list(SERIES_OPTIONS.keys()))
-    limit_rows = st.slider("Liczba wierszy", min_value=10, max_value=120, value=30, step=10)
+    current_year = date.today().year
+    start_year = st.number_input("Rok początkowy", min_value=2006, max_value=current_year, value=2006, step=1)
+    end_year = st.number_input("Rok końcowy", min_value=int(start_year), max_value=current_year, value=current_year, step=1)
+    limit_rows = st.slider("Liczba wierszy, dane kwartalne", min_value=10, max_value=120, value=30, step=10)
     if st.button("Odśwież dane"):
         st.cache_data.clear()
         st.rerun()
@@ -43,8 +49,11 @@ except Exception as exc:
     st.stop()
 
 df_view = build_view_data(df=df, population_mln=population_mln, workers_mln=workers_mln)
+df_view = df_view[
+    (df_view["date"].dt.year >= int(start_year)) & (df_view["date"].dt.year <= int(end_year))
+]
 if df_view.empty:
-    st.warning("Brak danych od 2006 roku.")
+    st.warning(f"Brak danych dla zakresu {int(start_year)}-{int(end_year)}.")
     st.stop()
 
 series_selection = SERIES_OPTIONS[series_label]

@@ -19,14 +19,25 @@ def render_debt_view(
     c4.metric("Dług EDP (mld PLN)", f"{latest['edp_debt_pln_bn']:.1f}")
     c5.metric("Dług EDP (% PKB)", f"{latest['edp_debt_pct_gdp']:.1f}")
 
-    st.subheader(f"{series_label} (od 2006)")
+    period_start = df_view["date"].iloc[0].year
+    period_end = df_view["date"].iloc[-1].year
+    if period_end >= pd.Timestamp.today().year:
+        period_label = f"od {period_start}"
+    else:
+        period_label = f"{period_start}-{period_end}"
+    st.subheader(f"{series_label} ({period_label})")
+
+    x_domain = [df_view["date"].min(), df_view["date"].max()]
+    x_axis = alt.Axis(format="%Y", tickCount="year")
+    x_scale = alt.Scale(domain=x_domain, clamp=True)
+
     if isinstance(series_selection, list):
         chart_df = df_view[["date", *series_selection]].copy()
         chart_long = chart_df.melt(id_vars="date", var_name="series", value_name="value")
         chart_long["series"] = chart_long["series"].replace(series_legend_labels)
 
         line = alt.Chart(chart_long).mark_line().encode(
-            x=alt.X("date:T", title="Data"),
+            x=alt.X("date:T", title="Data", axis=x_axis, scale=x_scale),
             y=alt.Y("value:Q", title=series_label),
             color=alt.Color("series:N", title="Seria"),
             tooltip=[
@@ -35,6 +46,15 @@ def render_debt_view(
                 alt.Tooltip("value:Q", title="Wartość", format=".2f"),
             ],
         )
+        ofe_start = pd.Timestamp("2014-02-03")
+        ofe_df = pd.DataFrame({"date": [ofe_start], "label": ["Reforma OFE"]})
+        marker_ofe = alt.Chart(ofe_df).mark_rule(color="purple", strokeDash=[8, 6]).encode(x="date:T")
+        marker_ofe_label = alt.Chart(ofe_df).mark_text(align="left", dx=6, dy=-8, color="purple").encode(
+            x="date:T",
+            y=alt.value(18),
+            text="label:N",
+        )
+
         plus_500_start = pd.Timestamp("2016-04-01")
         plus_500_df = pd.DataFrame({"date": [plus_500_start], "label": ["Start 500+"]})
         marker_500 = alt.Chart(plus_500_df).mark_rule(color="green", strokeDash=[8, 6]).encode(x="date:T")
@@ -54,13 +74,13 @@ def render_debt_view(
         )
 
         st.altair_chart(
-            (line + marker_500 + marker_500_label + marker_800 + marker_800_label).interactive(),
+            (line + marker_ofe + marker_ofe_label + marker_500 + marker_500_label + marker_800 + marker_800_label).interactive(),
             use_container_width=True,
         )
     else:
         chart_df = df_view[["date", series_selection]].copy()
         line = alt.Chart(chart_df).mark_line().encode(
-            x=alt.X("date:T", title="Data"),
+            x=alt.X("date:T", title="Data", axis=x_axis, scale=x_scale),
             y=alt.Y(f"{series_selection}:Q", title=series_label),
             tooltip=[
                 alt.Tooltip("date:T", title="Data"),
