@@ -29,12 +29,12 @@ SERIES_OPTIONS = {
     "Dług DP (% PKB)": "public_debt_pct_gdp",
     "Dług EDP (% PKB)": "edp_debt_pct_gdp",
     "Różnica EDP do DP (mld PLN)": "edp_to_public_diff",
-    "Stosunek Różnicy do EDP (%)": "public_to_edp_ratio",
-    "Ilość długu: Polak vs osoba pracująca (KPLN)": [
+    "Stosunek różnicy długu do długu EDP (%)": "public_to_edp_ratio",
+    "Ilość długu: Polak vs Osoba pracująca (KPLN)": [
         "public_debt_per_pole_pln",
         "public_debt_per_worker_pln",
     ],
-    "Ilość EDP: Polak vs osoba pracująca (KPLN)": [
+    "Ilość długu EDP: Polak vs Osoba pracująca (KPLN)": [
         "edp_debt_per_pole_pln",
         "edp_debt_per_worker_pln",
     ],
